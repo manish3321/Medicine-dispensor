@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Medicine Dispenser </title>
+     <!-- Correct way to reference static files in Flask -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Basic styles for tabs */
+        .tab-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .tab-buttons button.active {
+            background-color: #0056b3;
+        }
+
+        .tab-content {
+            display: none;
+            width: 50%;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label, input {
+            margin-bottom: 10px;
+        }
+
+        button[type="submit"] {
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        .logout-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .logout-container form {
+            margin: 0;
+        }
+
+        .logout-container button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .logout-container button:hover {
+            background-color: #d32f2f;
+        }
+
+
+
+
+         .popup {
+        display: none; 
+        position: fixed; 
+        left: 0;
+        top: 0;
+        width: 100%; 
+        height: 100%; 
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center; 
+        align-items: center; 
+        z-index: 1000;
+        animation: fadeIn 0.5s;
+    }
+
+    .popup-content {
+        background-color: white; 
+        padding: 20px; 
+        border-radius: 5px; 
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        text-align: center;
+    }
+
+    .close {
+        color: #aaa; 
+        float: right; 
+        font-size: 28px; 
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black; 
+        text-decoration: none; 
+        cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+
+
+
+
+
+
+    </style>
+</head>
+<body>
+    <!-- Logout Button in Top Right Corner -->
+    <div class="logout-container">
+        <form action="{{ url_for('logout') }}" method="POST">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+
+
+     
+    <div class="tab-container">
+        <h2>User Management Dashboard</h2>
+        <div class="tab-buttons">
+            <button class="tab-link active" data-tab="addUserTab">Add User ID</button>
+            <button class="tab-link" data-tab="updateUserTab">Update User ID</button>
+            <button class="tab-link" data-tab="deleteUserTab">Delete User ID</button>
+        </div>
+
+        <div id="addUserTab" class="tab-content active">
+            <h3>Add User ID</h3>
+             <form action="/add-user" method="POST" enctype="multipart/form-data">
+                <label for="addUserId">User ID:</label>
+                <input type="text" id="addUserId" name="addUserId" required>
+
+                <label for="addPatientName">Patient Name:</label>
+                <input type="text" id="addPatientName" name="addPatientName" required>
+
+                <label for="addPatientage">Patient Age:</label>
+                <input type="number" id="addPatientage" name="addPatientage" required>
+
+                <label for="addUserFace">Face ID:</label>
+                <button type="button" id="open-camera">Capture Your Image</button>
+                <video id="video" autoplay></video>
+                <canvas id="canvas"></canvas>
+                <input type="hidden" id="addUserFace" name="addUserFace">
+
+                <button type="button" id="capture">Capture Image</button>
+                <button type="button" id="retake">Retake Image</button>
+
+                <label for="addUserRFID">RFID Tag:</label>
+                <input type="text" id="addUserRFID" name="addUserRFID" required>
+
+                <button type="submit">Add User</button>
+            </form>
+
+           <!-- Success Popup -->
+<div id="success-popup" class="popup">
+    <div class="popup-content">
+        <span id="close-popup" class="close">&times;</span>
+        <h4>User successfully added!</h4>
+    </div>
+</div>
+
+        </div>
+
+        <div id="updateUserTab" class="tab-content">
+            <h3>Update User ID</h3>
+            <form action="/update-user" method="POST">
+                <label for="updateUserId">User ID:</label>
+                <input type="text" id="updateUserId" name="userId" required>
+
+                <label for="updateUserFace">New Face ID:</label>
+                <input type="file" id="updateUserFace" name="faceId" accept="image/*">
+
+                <label for="updateUserRFID">New RFID Tag:</label>
+                <input type="text" id="updateUserRFID" name="rfidTag">
+
+                <button type="submit">Update User</button>
+            </form>
+        </div>
+
+        <div id="deleteUserTab" class="tab-content">
+            <h3>Delete User ID</h3>
+            <form action="/delete-user" method="POST">
+                <label for="deleteUserId">User ID:</label>
+                <input type="text" id="deleteUserId" name="userId" required>
+
+                <button type="submit">Delete User</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+
+
+        // JavaScript to handle tab switching
+        document.querySelectorAll('.tab-link').forEach(button => {
+            button.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+
+                document.querySelectorAll('.tab-link').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+
+                this.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // JavaScript to handle webcam capture
+        const openCameraButton = document.getElementById('open-camera');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+        const retakeButton = document.getElementById('retake');
+        const faceInput = document.getElementById('addUserFace');
+
+        let stream;
+
+        openCameraButton.addEventListener('click', function() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(s) {
+                    stream = s;
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    captureButton.style.display = 'inline';
+                    retakeButton.style.display = 'none';
+                    canvas.style.display = 'none';
+
+
+
+                })
+                .catch(function(err) {
+                    console.error("An error occurred: " + err);
+                });
+        });
+
+
+
+
+        captureButton.addEventListener('click', function() {
+    // Set the canvas dimensions to match the video feed
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    
+    // Draw the current video frame onto the canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Stop the video stream (you can leave this out if you want the video to keep running)
+    stream.getTracks().forEach(track => track.stop());
+    
+    // Convert the canvas image to base64 format and store it in the hidden input field
+    const imageData = canvas.toDataURL('image/png');
+    faceInput.value = imageData; // Store base64 image data
+    
+    // Hide the video and show the captured image on the canvas
+    video.style.display = 'none';
+    canvas.style.display = 'block';
+    captureButton.style.display = 'none';
+    retakeButton.style.display = 'inline'; // Show retake button
+});
+
+retakeButton.addEventListener('click', function() {
+    // Reopen the camera for retaking the image
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(s) {
+            stream = s;
+            video.srcObject = stream;
+            video.style.display = 'block';
+            captureButton.style.display = 'inline';
+            retakeButton.style.display = 'none';
+            canvas.style.display = 'none'; // Hide the canvas until a new image is captured
+        })
+        .catch(function(err) {
+            console.error("An error occurred: " + err);
+        });
+});
+
+
+         // Function to show the success popup
+    function showPopup() {
+        const popup = document.getElementById('success-popup');
+        popup.style.display = 'flex'; // Use flex to center the popup
+    }
+
+    // Function to hide the success popup
+    function hidePopup() {
+        const popup = document.getElementById('success-popup');
+        popup.style.display = 'none';
+    }
+
+    // Check if the URL contains a success parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+
+    // Show the success popup if success is 1
+    if (success === '1') {
+        showPopup();
+
+        // Hide the popup after 3 seconds
+        setTimeout(hidePopup, 3000);
+    }
+
+    // Close the popup when the close button is clicked
+    document.getElementById('close-popup').onclick = hidePopup;
+
+    // Close the popup when clicking outside of the popup content
+    window.onclick = function(event) {
+        const popup = document.getElementById('success-popup');
+        if (event.target === popup) {
+            hidePopup();
+        }
+    }
+
+    </script>
+</body>
+</html>
